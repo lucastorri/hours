@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Project Hours",
+  "scopeName": "text.hours",
+  "patterns": [{ "include": "#expression" }, { "include": "#comment" }],
+  "repository": {
+    "expression": {
+      "match": "^(\\d{4}/(0[1-9]|1[0-2])/([0-2]\\d|3[01])) - (\\d(\\.\\d+)?) - (.+)$",
+      "captures": {
+        "1": {
+          "name": "keyword.control.date"
+        },
+        "4": {
+          "name": "variable.language.duration"
+        },
+        "6": {
+          "name": "string.other.description"
+        }
+      }
+    },
+    "comment": {
+      "begin": "^#",
+      "end": "$",
+      "name": "comment.line"
+    }
+  }
+}
