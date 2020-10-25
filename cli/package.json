@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "hours-lang": "file:../hours-lang",
     "luxon": "^1.25.0",
     "vscode-oniguruma": "^1.4.0",
     "vscode-textmate": "^5.2.0"
