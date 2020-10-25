@@ -65,7 +65,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Parser = void 0;
+exports.Parser = exports.Line = void 0;
 var fs_1 = __importDefault(require("fs"));
 var tokenizer = __importStar(require("vscode-textmate"));
 var oniguruma = __importStar(require("vscode-oniguruma"));
@@ -100,7 +100,7 @@ var registry = new tokenizer.Registry({
                 case 1:
                     data = _a.sent();
                     return [2 /*return*/, tokenizer.parseRawGrammar(data.toString(), grammarFile)];
-                case 2: return [2 /*return*/, Promise.resolve(null)];
+                case 2: return [2 /*return*/];
             }
         });
     }); },
@@ -125,6 +125,7 @@ var Line = /** @class */ (function () {
     };
     return Line;
 }());
+exports.Line = Line;
 var LineTokens = /** @class */ (function () {
     function LineTokens(line, tokens) {
         this.line = line;

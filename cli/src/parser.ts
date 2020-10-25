@@ -37,7 +37,7 @@ const registry = new tokenizer.Registry({
   },
 });
 
-class Line {
+export class Line {
   readonly content: string;
   readonly number: number;
   constructor(content: string, number: number) {
