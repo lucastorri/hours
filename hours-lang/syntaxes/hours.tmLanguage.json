@@ -11,7 +11,7 @@
           "name": "keyword.control.date"
         },
         "4": {
-          "name": "variable.language.duration"
+          "name": "variable.parameter.duration"
         },
         "6": {
           "name": "string.other.description"

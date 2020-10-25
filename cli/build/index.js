@@ -54,6 +54,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -62,6 +69,7 @@ var fs_1 = __importDefault(require("fs"));
 var tokenizer = __importStar(require("vscode-textmate"));
 var oniguruma = __importStar(require("vscode-oniguruma"));
 var path_1 = __importDefault(require("path"));
+var luxon_1 = require("luxon");
 var projectDir = path_1.default.join(__dirname, "..");
 var wasmBin = fs_1.default.readFileSync(path_1.default.join(projectDir, "node_modules/vscode-oniguruma/release/onig.wasm")).buffer;
 var vscodeOnigurumaLib = oniguruma
@@ -94,23 +102,100 @@ var registry = new tokenizer.Registry({
         });
     }); },
 });
-registry.loadGrammar("text.hours").then(function (grammar) {
-    grammar &&
-        fs_1.default
-            .readFileSync("/Users/lucastorri/Downloads/Untitled-1.hours")
-            .toString()
-            .split("\n")
-            .reduce(function (_a, line) {
-            var previousRuleStack = _a.previousRuleStack, entries = _a.entries;
-            console.info("Tokenizing line: " + line);
-            var _b = grammar.tokenizeLine(line, previousRuleStack), ruleStack = _b.ruleStack, tokens = _b.tokens;
-            tokens
-                .filter(function (token) { return token.scopes.length > 1; })
-                .forEach(function (token) {
-                console.info(" - " + token.startIndex + "-" + token.endIndex + " (" + line.substring(token.startIndex, token.endIndex) + ") with scopes " + token.scopes.join(", "));
-            });
-            return { previousRuleStack: ruleStack, entries: entries };
-        }, { previousRuleStack: tokenizer.INITIAL, entries: [] });
+var Line = /** @class */ (function () {
+    function Line(content, number) {
+        this.content = content;
+        this.number = number;
+    }
+    Line.prototype.tokenize = function (grammar, previousLineStack) {
+        var _a = grammar.tokenizeLine(this.content, previousLineStack), tokens = _a.tokens, ruleStack = _a.ruleStack;
+        return {
+            lineStack: ruleStack,
+            tokens: new LineTokens(this, tokens),
+        };
+    };
+    Line.prototype.substring = function (token) {
+        return this.content.substring(token.startIndex, token.endIndex);
+    };
+    Line.prototype.toString = function () {
+        return this.number + ": " + this.content;
+    };
+    return Line;
+}());
+var LineTokens = /** @class */ (function () {
+    function LineTokens(line, tokens) {
+        this.line = line;
+        this.tokens = tokens;
+    }
+    LineTokens.prototype.startsWithScope = function (scope) {
+        return this.tokens.length !== 0 && this.tokens[0].scopes.includes(scope);
+    };
+    LineTokens.prototype.contentForToken = function (scope) {
+        var token = this.tokens.find(function (token) { return token.scopes.includes(scope); });
+        if (!token) {
+            throw new Error("Scope " + scope + " not found in line " + this.line + ".");
+        }
+        return this.line.substring(token);
+    };
+    LineTokens.prototype.toPossibleEntry = function () {
+        if (this.startsWithScope("comment.line")) {
+            return {
+                line: this.line,
+                comment: this.line.substring(this.tokens[1]).trim(),
+            };
+        }
+        else if (this.startsWithScope("keyword.control.date")) {
+            return {
+                line: this.line,
+                date: luxon_1.DateTime.fromFormat(this.contentForToken("keyword.control.date"), "yyyy/MM/dd").toObject(),
+                duration: parseFloat(this.contentForToken("variable.parameter.duration")),
+                description: this.contentForToken("string.other.description"),
+            };
+        }
+        return null;
+    };
+    return LineTokens;
+}());
+registry
+    .loadGrammar("text.hours")
+    .then(function (grammar) {
+    if (!grammar) {
+        throw new Error("Could not get a grammar for text.hours");
+    }
+    return grammar;
+})
+    .then(function (grammar) { return __awaiter(void 0, void 0, void 0, function () {
+    var lines;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, fs_1.default.promises.readFile("/Users/lucastorri/Downloads/Untitled-1.hours")];
+            case 1:
+                lines = (_a.sent())
+                    .toString()
+                    .split("\n")
+                    .map(function (content, i) { return new Line(content, i); });
+                return [2 /*return*/, lines.reduce(function (_a, line) {
+                        var previousLineStack = _a.previousLineStack, entries = _a.entries;
+                        var _b = line.tokenize(grammar, previousLineStack), tokens = _b.tokens, lineStack = _b.lineStack;
+                        var newEntry = tokens.toPossibleEntry();
+                        return Object.assign({ previousLineStack: lineStack }, newEntry ? { entries: __spreadArrays(entries, [newEntry]) } : { entries: entries });
+                        // tokens
+                        //   .filter((token) => token.scopes.length > 1)
+                        //   .forEach((token) => {
+                        //     console.info(
+                        //       ` - ${token.startIndex}-${token.endIndex} (${line.substring(
+                        //         token.startIndex,
+                        //         token.endIndex
+                        //       )}) with scopes ${token.scopes.join(", ")}`
+                        //     );
+                        //   });
+                        // return { previousRuleStack: ruleStack, entries };
+                    }, { previousLineStack: tokenizer.INITIAL, entries: [] }).entries];
+        }
+    });
+}); })
+    .then(function (entries) {
+    entries.forEach(function (entry) { return console.log(entry); });
 }, function (error) {
     console.error("gah", error);
 });
