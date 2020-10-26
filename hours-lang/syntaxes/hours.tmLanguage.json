@@ -2,8 +2,24 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Project Hours",
   "scopeName": "text.hours",
-  "patterns": [{ "include": "#expression" }, { "include": "#comment" }],
+  "patterns": [
+    { "include": "#config" },
+    { "include": "#expression" },
+    { "include": "#comment" }
+  ],
   "repository": {
+    "config": {
+      "name": "constant.other.config",
+      "match": "^@(\\w+)(=(\\w+))?$",
+      "captures": {
+        "1": {
+          "name": "constant.other.config.key"
+        },
+        "3": {
+          "name": "constant.other.config.value"
+        }
+      }
+    },
     "expression": {
       "match": "^(\\d{4}/(0[1-9]|1[0-2])/([0-2]\\d|3[01])) - (\\d(\\.\\d+)?) - (.+)$",
       "captures": {

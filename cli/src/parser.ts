@@ -81,10 +81,14 @@ class LineTokens {
     return this.tokens.length !== 0 && this.tokens[0].scopes.includes(scope);
   }
 
-  contentForToken(scope: string): string {
+  contentForToken(scope: string, defaultContent?: string): string {
     const token = this.tokens.find((token) => token.scopes.includes(scope));
     if (!token) {
-      throw new Error(`Scope ${scope} not found in line ${this.line}.`);
+      if (defaultContent === undefined) {
+        throw new Error(`Scope ${scope} not found in line ${this.line}.`);
+      } else {
+        return defaultContent;
+      }
     }
     return this.line.substring(token);
   }
@@ -107,16 +111,54 @@ class LineTokens {
         ),
         description: this.contentForToken("string.other.description"),
       };
+    } else if (this.startsWithScope("constant.other.config")) {
+      return {
+        line: this.line,
+        key: this.contentForToken("constant.other.config.key"),
+        value: this.contentForToken("constant.other.config.value", ""),
+      };
     }
   }
 }
 
 type PossibleEntry = Entry | undefined;
 
+export type TimeReport = {
+  date: DateObject;
+  duration: number;
+  description: string;
+};
 export type Entry = { line: Line } & (
   | { comment: string }
-  | { date: DateObject; duration: number; description: string }
+  | TimeReport
+  | { key: string; value: string }
 );
+
+export class Entries {
+  readonly all: Entry[];
+  readonly config: { [key: string]: string };
+
+  constructor(all: Entry[]) {
+    this.all = all;
+    this.config = all.reduce(
+      (config, entry) =>
+        "key" in entry
+          ? Object.assign({ [entry.key]: entry.value }, config)
+          : config,
+      {}
+    );
+  }
+
+  timeReports(): TimeReport[] {
+    const timeReports: TimeReport[] = [];
+    this.all.forEach((entry) => {
+      if ("date" in entry) {
+        timeReports.push(entry);
+      }
+    });
+    return timeReports;
+  }
+}
 
 export class Parser {
   private grammar: tokenizer.IGrammar;
@@ -124,36 +166,40 @@ export class Parser {
     this.grammar = grammar;
   }
 
-  async parse(lines: Line[]): Promise<Entry[]> {
+  async parse(lines: Line[]): Promise<Entries> {
     type ReduceState = {
       previousLineStack: tokenizer.StackElement;
       entries: Entry[];
     };
 
-    return lines.reduce<ReduceState>(
-      ({ previousLineStack, entries }, line) => {
-        const { tokens, lineStack } = line.tokenize(
-          this.grammar,
-          previousLineStack
-        );
+    return new Entries(
+      lines.reduce<ReduceState>(
+        ({ previousLineStack, entries }, line) => {
+          const { tokens, lineStack } = line.tokenize(
+            this.grammar,
+            previousLineStack
+          );
 
-        const possibleEntry = tokens.toPossibleEntry();
-        return Object.assign(
-          { previousLineStack: lineStack },
-          possibleEntry ? { entries: [...entries, possibleEntry] } : { entries }
-        );
-      },
-      { previousLineStack: tokenizer.INITIAL, entries: [] }
-    ).entries;
+          const possibleEntry = tokens.toPossibleEntry();
+          return Object.assign(
+            { previousLineStack: lineStack },
+            possibleEntry
+              ? { entries: [...entries, possibleEntry] }
+              : { entries }
+          );
+        },
+        { previousLineStack: tokenizer.INITIAL, entries: [] }
+      ).entries
+    );
   }
 
-  parseContent(content: string): Promise<Entry[]> {
+  parseContent(content: string): Promise<Entries> {
     return this.parse(
       content.split("\n").map((lineContent, i) => new Line(lineContent, i))
     );
   }
 
-  async parseFile(inputFile: string): Promise<Entry[]> {
+  async parseFile(inputFile: string): Promise<Entries> {
     const content = await fs.promises.readFile(inputFile, {
       encoding: "utf-8",
     });
