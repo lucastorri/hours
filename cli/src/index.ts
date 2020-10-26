@@ -49,8 +49,8 @@ yargs(process.argv.slice(2))
     })
   )
   .command(
-    "print",
-    "Print all entries",
+    "debug",
+    "Print all entries in a file",
     (_yargs) => {},
     run((result) => result.parsedLines.forEach((parsed) => console.log(parsed)))
   ).argv;

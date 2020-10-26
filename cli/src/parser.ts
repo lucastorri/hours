@@ -93,8 +93,10 @@ class LineTokens {
     return this.line.substring(token);
   }
 
-  toPossibleEntry(): PossibleParsedLine {
-    if (this.startsWithScope("comment.line")) {
+  parse(): ParsedLine {
+    if (this.line.content.trim() === "") {
+      return { line: this.line, empty: true };
+    } else if (this.startsWithScope("comment.line")) {
       return {
         line: this.line,
         comment: this.line.substring(this.tokens[1]).trim(),
@@ -117,11 +119,11 @@ class LineTokens {
         key: this.contentForToken("constant.other.config.key"),
         value: this.contentForToken("constant.other.config.value", ""),
       };
+    } else {
+      throw new Error(`Failed to parse line ${this.line}`);
     }
   }
 }
-
-type PossibleParsedLine = ParsedLine | undefined;
 
 export interface Entry {
   readonly line: Line;
@@ -143,10 +145,11 @@ export type ParsedLine = { line: Line } & (
   | { comment: string }
   | { date: DateObject; duration: number; description: string }
   | { key: string; value: string }
+  | { empty: true }
 );
 
 export class ParserResult {
-  readonly parsedLines: ParsedLine[];
+  readonly parsedLines: ReadonlyArray<ParsedLine>;
   readonly config: { [key: string]: string };
 
   constructor(parsedLines: ParsedLine[]) {
@@ -180,27 +183,24 @@ export class Parser {
   async parse(lines: Line[]): Promise<ParserResult> {
     type ReduceState = {
       previousLineStack: tokenizer.StackElement;
-      entries: ParsedLine[];
+      parsedLines: ParsedLine[];
     };
 
     return new ParserResult(
       lines.reduce<ReduceState>(
-        ({ previousLineStack, entries }, line) => {
+        ({ previousLineStack, parsedLines }, line) => {
           const { tokens, lineStack } = line.tokenize(
             this.grammar,
             previousLineStack
           );
 
-          const possibleEntry = tokens.toPossibleEntry();
-          return Object.assign(
-            { previousLineStack: lineStack },
-            possibleEntry
-              ? { entries: [...entries, possibleEntry] }
-              : { entries }
-          );
+          return {
+            previousLineStack: lineStack,
+            parsedLines: [...parsedLines, tokens.parse()],
+          };
         },
-        { previousLineStack: tokenizer.INITIAL, entries: [] }
-      ).entries
+        { previousLineStack: tokenizer.INITIAL, parsedLines: [] }
+      ).parsedLines
     );
   }
 
