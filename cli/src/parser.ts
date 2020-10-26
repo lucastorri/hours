@@ -93,7 +93,7 @@ class LineTokens {
     return this.line.substring(token);
   }
 
-  toPossibleEntry(): PossibleEntry {
+  toPossibleEntry(): PossibleParsedLine {
     if (this.startsWithScope("comment.line")) {
       return {
         line: this.line,
@@ -121,26 +121,37 @@ class LineTokens {
   }
 }
 
-type PossibleEntry = Entry | undefined;
+type PossibleParsedLine = ParsedLine | undefined;
 
-export type TimeReport = {
-  date: DateObject;
-  duration: number;
-  description: string;
-};
-export type Entry = { line: Line } & (
+export interface Entry {
+  readonly line: Line;
+}
+
+export interface TimeReport extends Entry {
+  readonly line: Line;
+  readonly date: DateObject;
+  readonly duration: number;
+  readonly description: string;
+}
+
+export interface Comment extends Entry {
+  readonly line: Line;
+  readonly comment: string;
+}
+
+export type ParsedLine = { line: Line } & (
   | { comment: string }
-  | TimeReport
+  | { date: DateObject; duration: number; description: string }
   | { key: string; value: string }
 );
 
-export class Entries {
-  readonly all: Entry[];
+export class ParserResult {
+  readonly parsedLines: ParsedLine[];
   readonly config: { [key: string]: string };
 
-  constructor(all: Entry[]) {
-    this.all = all;
-    this.config = all.reduce(
+  constructor(parsedLines: ParsedLine[]) {
+    this.parsedLines = parsedLines;
+    this.config = parsedLines.reduce(
       (config, entry) =>
         "key" in entry
           ? Object.assign({ [entry.key]: entry.value }, config)
@@ -151,7 +162,7 @@ export class Entries {
 
   timeReports(): TimeReport[] {
     const timeReports: TimeReport[] = [];
-    this.all.forEach((entry) => {
+    this.parsedLines.forEach((entry) => {
       if ("date" in entry) {
         timeReports.push(entry);
       }
@@ -166,13 +177,13 @@ export class Parser {
     this.grammar = grammar;
   }
 
-  async parse(lines: Line[]): Promise<Entries> {
+  async parse(lines: Line[]): Promise<ParserResult> {
     type ReduceState = {
       previousLineStack: tokenizer.StackElement;
-      entries: Entry[];
+      entries: ParsedLine[];
     };
 
-    return new Entries(
+    return new ParserResult(
       lines.reduce<ReduceState>(
         ({ previousLineStack, entries }, line) => {
           const { tokens, lineStack } = line.tokenize(
@@ -193,13 +204,13 @@ export class Parser {
     );
   }
 
-  parseContent(content: string): Promise<Entries> {
+  parseContent(content: string): Promise<ParserResult> {
     return this.parse(
       content.split("\n").map((lineContent, i) => new Line(lineContent, i))
     );
   }
 
-  async parseFile(inputFile: string): Promise<Entries> {
+  async parseFile(inputFile: string): Promise<ParserResult> {
     const content = await fs.promises.readFile(inputFile, {
       encoding: "utf-8",
     });

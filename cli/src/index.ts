@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
-import createParser, { Entries } from "./parser";
+import createParser, { ParserResult } from "./parser";
 import yargs from "yargs";
 
-const parse = (file: string, f: (entries: Entries) => any): Promise<void> =>
+const parse = (file: string, f: (result: ParserResult) => any): Promise<void> =>
   createParser()
     .then((parser) => parser.parseFile(file))
     .then((entries) => f(entries))
     .catch((error) => console.error(error));
 
-const run = <A>(f: (entries: Entries, args: A) => any) => (
+const run = <A>(f: (result: ParserResult, args: A) => any) => (
   args: A & { input: string }
 ) => parse(args.input, (entries) => f(entries, args));
 
-type Formatter = (entries: Entries, args: FormatArgs) => any;
+type Formatter = (result: ParserResult, args: FormatArgs) => any;
 export type FormatArgs = {
   format: string;
 };
@@ -52,5 +52,5 @@ yargs(process.argv.slice(2))
     "print",
     "Print all entries",
     (_yargs) => {},
-    run((entries) => entries.all.forEach((entry) => console.log(entry)))
+    run((result) => result.parsedLines.forEach((parsed) => console.log(parsed)))
   ).argv;

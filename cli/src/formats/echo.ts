@@ -1,7 +1,7 @@
 import { FormatArgs } from "..";
-import { Entries } from "../parser";
+import { ParserResult } from "../parser";
 
-export default function (entries: Entries, args: FormatArgs) {
+export default function (result: ParserResult, args: FormatArgs) {
   console.log(args);
-  entries.all.forEach((entry) => console.log(entry.line.content));
+  result.parsedLines.forEach((parsed) => console.log(parsed.line.content));
 }

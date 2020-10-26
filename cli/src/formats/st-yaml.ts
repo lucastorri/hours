@@ -1,9 +1,9 @@
-import { Entries } from "../parser";
+import { ParserResult } from "../parser";
 
 type DateEntries = { date: string; hours: number[]; comments: string[] };
-export default function (entries: Entries) {
+export default function (result: ParserResult) {
   const groupedByDate: { [key: string]: DateEntries } = {};
-  entries.timeReports().map(({ date, duration, description }) => {
+  result.timeReports().map(({ date, duration, description }) => {
     const dateKey = `${date.year}-${date.month}-${date.day}`;
     const dateEntry = (groupedByDate[dateKey] = groupedByDate[dateKey] || {
       date: dateKey,
@@ -26,8 +26,8 @@ export default function (entries: Entries) {
           tab`-
           |  date: ${entry.date}
           |  timeInHrs: ${totalHours}
-          |  client: ${entries.config.client}
-          |  project: ${entries.config.project}
+          |  client: ${result.config.client}
+          |  project: ${result.config.project}
           |  billable: true
           |  comment: ${comment}
           |`
