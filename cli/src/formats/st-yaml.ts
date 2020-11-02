@@ -4,7 +4,7 @@ type DateEntries = { date: string; hours: number[]; comments: string[] };
 export default function (result: ParserResult) {
   const groupedByDate: { [key: string]: DateEntries } = {};
   result.timeReports().map(({ date, duration, description }) => {
-    const dateKey = `${date.year}-${date.month}-${date.day}`;
+    const dateKey = date.toFormat("yyyy-MM-dd");
     const dateEntry = (groupedByDate[dateKey] = groupedByDate[dateKey] || {
       date: dateKey,
       hours: [],

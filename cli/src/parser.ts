@@ -107,7 +107,7 @@ class LineTokens {
         date: DateTime.fromFormat(
           this.contentForToken("keyword.control.date"),
           "yyyy/MM/dd"
-        ).toObject(),
+        ),
         duration: parseFloat(
           this.contentForToken("variable.parameter.duration")
         ),
@@ -131,7 +131,7 @@ export interface Entry {
 
 export interface TimeReport extends Entry {
   readonly line: Line;
-  readonly date: DateObject;
+  readonly date: DateTime;
   readonly duration: number;
   readonly description: string;
 }
@@ -143,7 +143,7 @@ export interface Comment extends Entry {
 
 export type ParsedLine = { line: Line } & (
   | { comment: string }
-  | { date: DateObject; duration: number; description: string }
+  | { date: DateTime; duration: number; description: string }
   | { key: string; value: string }
   | { empty: true }
 );
