@@ -1,4 +1,8 @@
 #!/bin/bash
 
-cd "$(dirname "$0")/.."
-./node_modules/ts-node/dist/bin.js src/index.ts "$@"
+readonly SCRIPT_DIR=$(
+  cd "$(dirname "$0")/.."
+  pwd
+)
+
+"$SCRIPT_DIR/node_modules/ts-node/dist/bin.js" --dir "$SCRIPT_DIR" "src/index.ts" "$@"

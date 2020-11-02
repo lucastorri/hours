@@ -19,6 +19,7 @@ export type FormatArgs = {
 };
 
 yargs(process.argv.slice(2))
+  .scriptName("hours")
   .option("input", {
     requiresArg: true,
     alias: "i",
