@@ -10,7 +10,7 @@
   "repository": {
     "config": {
       "name": "constant.other.config",
-      "match": "^@(\\w+)(=([\\w ]+))?$",
+      "match": "^@(\\w+)(=([\\w -]+))?$",
       "captures": {
         "1": {
           "name": "constant.other.config.key"
