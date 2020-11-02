@@ -31,7 +31,7 @@ yargs(process.argv.slice(2))
     "lint",
     "Lint a file",
     (_yargs) => {},
-    run((entries) => {})
+    run((result) => {})
   )
   .command(
     "export [format]",
@@ -43,10 +43,10 @@ yargs(process.argv.slice(2))
         type: "string",
       });
     },
-    run<FormatArgs>((entries, args) => {
+    run<FormatArgs>((result, args) => {
       const formatter: Formatter = require(`./formats/${args.format}`).default;
 
-      return formatter(entries, args);
+      return formatter(result, args);
     })
   )
   .command(
