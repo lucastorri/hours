@@ -1,6 +1,7 @@
 import { ParserResult } from "../parser";
 
 type DateEntries = { date: string; hours: number[]; comments: string[] };
+
 export default function (result: ParserResult) {
   const groupedByDate: { [key: string]: DateEntries } = {};
   result.timeReports().map(({ date, duration, description }) => {
