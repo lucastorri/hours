@@ -1,5 +1,4 @@
 import { DateTime } from "luxon";
-import { FormatArgs } from "..";
 import { ParserResult, TimeReport } from "../parser";
 
 type TimeFrameOptions = {
@@ -65,26 +64,28 @@ class DateEntry {
 }
 
 export default function (result: ParserResult) {
-  const byMonth = new TimeFrame((date) => [date.toFormat("yyyy-MM")]);
-  const byWeek = new TimeFrame(
-    (date) => [date.toFormat("yyyy-MM-WW"), date.toFormat("'Week #'WW")],
-    { prefix: "  " }
-  );
-  const byDay = new TimeFrame(
-    (date) => [date.toFormat("yyyy-MM-WW-dd"), date.toFormat("yyyy-MM-dd")],
-    { prefix: "    ", includeComments: true }
-  );
+  const labelledTimeFrames = {
+    byMonth: new TimeFrame((date) => [date.toFormat("yyyy-MM")]),
+    byWeek: new TimeFrame(
+      (date) => [date.toFormat("yyyy-MM-WW"), date.toFormat("'Week #'WW")],
+      { prefix: "  " }
+    ),
+    byDay: new TimeFrame(
+      (date) => [date.toFormat("yyyy-MM-WW-dd"), date.toFormat("yyyy-MM-dd")],
+      { prefix: "    ", includeComments: true }
+    ),
+  };
 
-  result.timeReports().forEach((report) => {
-    byMonth.add(report);
-    byWeek.add(report);
-    byDay.add(report);
-  });
+  const timeFrames = Object.values(labelledTimeFrames);
 
-  byMonth
-    .all()
-    .concat(byWeek.all())
-    .concat(byDay.all())
+  result
+    .timeReports()
+    .forEach((report) =>
+      timeFrames.forEach((timeFrame) => timeFrame.add(report))
+    );
+
+  timeFrames
+    .reduce((allEntries, timeFrame) => allEntries.concat(timeFrame.all()), [] as DateEntry[])
     .sort((a, b) => a.key.localeCompare(b.key))
     .forEach((entry) => console.log(entry.toString()));
 }
