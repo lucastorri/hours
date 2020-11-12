@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { ParserResult, TimeReport } from "../parser";
+import chalk from "chalk";
 
 type TimeFrameOptions = {
   prefix: string;
@@ -57,21 +58,29 @@ class DateEntry {
   }
 
   toString(): string {
-    return `${this.parent.options.prefix}${this.label}: [${this.hours}] ${
+    return `${this.parent.options.prefix}${chalk.green(
+      this.label
+    )}: [${chalk.magenta(this.hours)}] ${chalk.underline(
       this.parent.options.includeComments ? this.comments.join("; ") : ""
-    }`;
+    )}`;
   }
 }
 
 export default function (result: ParserResult) {
   const labelledTimeFrames = {
-    byMonth: new TimeFrame((date) => [date.toFormat("yyyy-MM")]),
+    byMonth: new TimeFrame((date) => [
+      date.toFormat("yyyy-MM"),
+      date.toFormat("MMMM yyyy-MM"),
+    ]),
     byWeek: new TimeFrame(
       (date) => [date.toFormat("yyyy-MM-WW"), date.toFormat("'Week #'WW")],
       { prefix: "  " }
     ),
     byDay: new TimeFrame(
-      (date) => [date.toFormat("yyyy-MM-WW-dd"), date.toFormat("yyyy-MM-dd")],
+      (date) => [
+        date.toFormat("yyyy-MM-WW-dd"),
+        date.toFormat("EEE yyyy-MM-dd"),
+      ],
       { prefix: "    ", includeComments: true }
     ),
   };
@@ -85,7 +94,10 @@ export default function (result: ParserResult) {
     );
 
   timeFrames
-    .reduce((allEntries, timeFrame) => allEntries.concat(timeFrame.all()), [] as DateEntry[])
+    .reduce(
+      (allEntries, timeFrame) => allEntries.concat(timeFrame.all()),
+      [] as DateEntry[]
+    )
     .sort((a, b) => a.key.localeCompare(b.key))
     .forEach((entry) => console.log(entry.toString()));
 }
