@@ -28,12 +28,6 @@ yargs(process.argv.slice(2))
     default: "project.hours",
   })
   .command(
-    "lint",
-    "Lint a file",
-    (_yargs) => {},
-    run((result) => {})
-  )
-  .command(
     "export [format]",
     "Export the input file in a given format",
     (yargs) => {
