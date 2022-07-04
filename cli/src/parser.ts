@@ -2,7 +2,7 @@ import fs from "fs";
 import * as tokenizer from "vscode-textmate";
 import * as oniguruma from "vscode-oniguruma";
 import path from "path";
-import { DateTime, DateObject } from "luxon";
+import { DateTime } from "luxon";
 
 const moduleFile = (filepath: string): string =>
   path.join(path.join(__dirname, "../node_modules"), filepath);
