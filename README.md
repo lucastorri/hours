@@ -6,10 +6,19 @@ This repository deliberately has no hours parser or editor grammar. `todo hours`
 
 ## Requirements
 
-- Node.js 24 or newer
+- Node.js 22.6 or newer
 - `todo` on `PATH`
 
-Install dependencies for development with `npm install`. The CLI runs TypeScript directly; there is no build step.
+Install once from this checkout:
+
+```sh
+npm install
+npm link
+```
+
+`npm link` puts `bin/hours` on `PATH`. The launcher runs the TypeScript directly, adding
+`--experimental-strip-types` on Node versions before 23.6; there is no build step.
+Changes in the checkout take effect immediately.
 
 ## Usage
 

@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=22.6"
   },
   "bin": {
-    "hours": "./src/cli.ts"
+    "hours": "./bin/hours"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
