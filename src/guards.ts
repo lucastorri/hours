@@ -1,0 +1,2 @@
+export const isUnknownRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
